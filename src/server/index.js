@@ -1,31 +1,69 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable indent */
 const express = require('express');
-const os = require('os');
+const bodyParser = require('body-parser');
 
 const app = express();
 
 app.use(express.static('dist'));
-app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-app.get('/api/getData', (req, res) => {
-    // eslint-disable-next-line global-require
-    const sql = require('mssql/msnodesqlv8');
+// eslint-disable-next-line global-require
+const sql = require('mssql/msnodesqlv8');
 
-    // config for your database
-    const config = {
-        database: 'rts_prd',
-        server: 'hbc-ms-sql801',
-        // driver: 'msnodesqlv8',
-        options: {
-            trustedConnection: true
-        }
-    };
+// config for your database
+const config = {
+    database: 'rts_prd',
+    server: 'hbc-ms-sql801',
+    // driver: 'msnodesqlv8',
+    options: {
+        trustedConnection: true
+    }
+};
+
+app.post('/api/getCount', (req, res) => {
     console.log('starting sql');
+    // console.log(req.body.selectedBanner);
 
+    const {
+ selectedBanner, selectedStoreType, selectedVendor, startDate, endDate, startTime, endTime
+} = req.body;
+
+    let serverNames = '';
+    let sqlQuery = '';
+
+    if (selectedBanner === 'Saks') {
+        serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
+        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
+                        and server in ${serverNames} and Vendor = '${selectedVendor}'
+                        group by transactionactioncode
+                        order by transactionactioncode`;
+    } else {
+        serverNames = '(\'RTS1\',\'RTS2\')';
+        if (selectedStoreType === 'Online') {
+            const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
+            sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+            where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
+                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}'
+                        group by transactionactioncode
+                        order by transactionactioncode`;
+        } else {
+            const storeNumber = '(\'91963\',\'9199\')';
+            sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
+                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber}
+                        group by transactionactioncode
+                        order by transactionactioncode`;
+        }
+    }
+    console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
-        pool.request().query('select top 10 Store,Terminal,Vendor,Server,TransactionActionCode from transactiondetail', (err, result) => {
+        pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
+                  console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
@@ -36,5 +74,54 @@ app.get('/api/getData', (req, res) => {
     console.log('ending sql');
 });
 
+app.post('/api/getTranDetails', (req, res) => {
+    console.log('starting sql');
+    // console.log(req.body.selectedBanner);
+
+    const {
+ selectedBanner, selectedStoreType, selectedVendor, selectedTranStatus,
+ startDate, endDate, startTime, endTime
+} = req.body;
+
+    let serverNames = '';
+    let sqlQuery = '';
+
+    if (selectedBanner === 'Saks') {
+        serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
+        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
+                        and server in ${serverNames} and Vendor = '${selectedVendor}' and TransactionActionCode='${selectedTranStatus}'
+                        order by transactionactioncode`;
+    } else {
+        serverNames = '(\'RTS1\',\'RTS2\')';
+        if (selectedStoreType === 'Online') {
+            const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
+            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+            where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
+                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}' and TransactionActionCode='${selectedTranStatus}'
+                        order by transactionactioncode`;
+        } else {
+            const storeNumber = '(\'91963\',\'9199\')';
+            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
+                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber} and TransactionActionCode='${selectedTranStatus}'
+                        order by transactionactioncode`;
+        }
+    }
+    console.log(sqlQuery);
+    const pool = new sql.ConnectionPool(config);
+    pool.connect().then(() => {
+        pool.request().query(sqlQuery, (err, result) => {
+              if (err) { res.send(err); } else {
+                  console.log(result.recordset);
+                  res.send({
+                      data: result.recordset
+                  });
+              }
+          });
+          sql.close();
+    });
+    console.log('ending sql');
+});
 
 app.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));

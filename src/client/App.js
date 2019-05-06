@@ -1,25 +1,14 @@
+/* eslint-disable*/
 import React, { Component } from 'react';
 import './app.css';
 import { BrowserRouter, Switch, Route } from 'react-router-dom';
 import Navbar from './Components/Layouts/navbar';
 import BannerReport from './Components/Reports/BannerReport';
 import 'materialize-css/dist/css/materialize.min.css';
+import StoreReport from './Components/Reports/StoreReport';
 
 class App extends Component {
-  state = { username: null };
-
-  componentDidMount() {
-    fetch('/api/getData')
-      .then((res) => {
-        console.log(res);
-        return res.json();
-      })
-      .then((user) => {
-        console.log(user);
-        this.setState({ username: user.username });
-      });
-  }
-
+  
   render() {
     return (
       <BrowserRouter>
@@ -27,6 +16,7 @@ class App extends Component {
           <Navbar />
           <Switch>
             <Route exact path="/" component={BannerReport} />
+            <Route path="/StoreReport" component={StoreReport} />
           </Switch>
         </div>
       </BrowserRouter>

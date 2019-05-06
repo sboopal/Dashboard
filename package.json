@@ -13,21 +13,19 @@
   "author": "Boopal Subramaniam",
   "license": "ISC",
   "dependencies": {
-    "@material-ui/core": "^3.9.3",
-    "@material-ui/icons": "^3.0.2",
     "babel-polyfill": "^6.26.0",
-    "bootstrap": "^4.3.1",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
     "express": "^4.16.3",
+    "jquery": "^3.4.1",
     "materialize-css": "^1.0.0-rc.2",
+    "moment": "^2.24.0",
     "msnodesqlv8": "^0.6.12",
     "mssql": "^5.0.5",
     "react": "^16.5.2",
-    "react-bootstrap": "^1.0.0-beta.8",
     "react-dom": "^16.8.6",
-    "react-redux": "^7.0.2",
     "react-router-dom": "^5.0.0",
-    "react-select": "^2.4.2",
-    "redux": "^4.0.1"
+    "react-table": "^6.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

@@ -19,3 +19,14 @@ form button, form h5{
 .dropdown-button{
   width: 150px;
 }
+.table.striped > tbody > tr:nth-child(odd) {
+  background-color: rgba(170, 213, 213, 0.5);
+}
+.table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.error {
+  border-color: red;
+}
