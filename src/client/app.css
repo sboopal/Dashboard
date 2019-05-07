@@ -4,7 +4,6 @@ html{
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
   background-size: 100%;
   background-position: bottom;
   min-height: 100%;
@@ -19,14 +18,16 @@ form button, form h5{
 .dropdown-button{
   width: 150px;
 }
-.table.striped > tbody > tr:nth-child(odd) {
-  background-color: rgba(170, 213, 213, 0.5);
-}
 .table {
   display: block;
   overflow-x: auto;
   white-space: nowrap;
 }
 .error {
-  border-color: red;
+  border-color: rgb(218, 137, 137);
+}
+#mainmenu .active{
+  font-weight: bold;
+  border-bottom: 2px solid white;
+  box-shadow: 0 5px 0;
 }

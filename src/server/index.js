@@ -75,8 +75,6 @@ app.post('/api/getCount', (req, res) => {
 });
 
 app.post('/api/getTranDetails', (req, res) => {
-    console.log('starting sql');
-    // console.log(req.body.selectedBanner);
 
     const {
  selectedBanner, selectedStoreType, selectedVendor, selectedTranStatus,
@@ -108,20 +106,22 @@ app.post('/api/getTranDetails', (req, res) => {
                         order by transactionactioncode`;
         }
     }
-    console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
-                  console.log(result.recordset);
+                  // console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
               }
+          }).catch((error) => {
+            console.log(`connection isse ${error}`);
           });
           sql.close();
-    });
-    console.log('ending sql');
+    }).catch((error) => {
+        console.log(`connection isse ${error}`);
+      });
 });
 
 app.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));
