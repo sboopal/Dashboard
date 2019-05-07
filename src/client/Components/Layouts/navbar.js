@@ -1,21 +1,42 @@
 /* eslint-disable */
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { Component } from 'react';
+import { Link,NavLink } from 'react-router-dom';
 
-const Navbar = () => {
-    return (
-      <nav className="nav-wrapper grey darken-3">
-            <div className="container">
-                <ul className="left">
-                    <li> <Link to='/' className='brand-logo'>RTS Reports</Link> </li>
-                </ul>
-                <ul className="right">
-                    <li> <Link to='/'>Banner Report</Link> </li>
-                    <li> <Link to='/StoreReport'>Store Report</Link> </li>
+
+
+class NavbarPage extends Component {
+
+    componentDidMount(){
+        console.log("test");
+    }
+
+    render(){
+        return (
+            <div>
+                <div className="navbar-fixed">
+                    <nav className="nav-wrapper cyan darken-2">
+                        <div className="container">
+                            <div className="row col s12 m6">
+                                <ul className="left">
+                                    <li> <Link to='/' className='brand-logo'>RTS Reports</Link> </li>
+                                </ul>
+                                <a href="#" data-target="sidemenu" className="sidenav-trigger"><i className="material-icons">menu</i></a>               
+                                <ul className="mainnav right hide-on-med-and-down" id="mainmenu">
+                                    <li> <NavLink to='/BannerReport' >Banner Report</NavLink> </li>
+                                    <li> <NavLink to='/StoreReport' >Store Report</NavLink> </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                <ul className="sidenav" id="sidemenu">
+                                <li> <NavLink to='/BannerReport'>Banner Report</NavLink> </li>
+                                <li> <NavLink to='/StoreReport'>Store Report</NavLink> </li>
                 </ul>
             </div>
-        </nav>
-    );
+        );
+    }
+    
 }
 
-export default Navbar;
+export default NavbarPage;

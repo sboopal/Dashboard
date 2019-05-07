@@ -6,6 +6,9 @@ import M from "materialize-css";
 import moment from 'moment';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
+import MessageModal from '../Layouts/Modal';
+import $ from 'jquery';
+import 'bootstrap';
 
 const vendorNodes = [
     {
@@ -52,7 +55,10 @@ class BannerReport extends Component {
             endDate:'false',
             endTime:'false',
         },
-        toggle:'false'
+        modalMessage : {
+            header : '',
+            content : ''
+        }
     }
   
     componentDidMount() {
@@ -104,6 +110,16 @@ class BannerReport extends Component {
         this.setState({data:[]})
     }
 
+    openModal = (header,content) => {
+        let modalMessage = this.state.modalMessage;
+        modalMessage['header'] = header;
+        modalMessage['content'] = content;
+        this.setState({data:[],modalMessage})
+        const elem = document.getElementById('mymodal');
+        const instance = M.Modal.init(elem, {dismissible: false});
+        instance.open();
+    }
+
     handleOnSubmit = (e) => {
         e.preventDefault();
         this.setState({toggle:'false'})
@@ -127,10 +143,17 @@ class BannerReport extends Component {
             })
             .then((results) => {
                 this.setState({ data: results.data });
+                if(this.state.data.length === 0)
+                {
+                    this.openModal('Warning','No data available for this inputs');
+                }
+            })
+            .catch((error) => {
+                this.openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator');
+                console.log('Error in connecting to the database' + error);
             });
         }else{
-            console.log('invalid form');
-            this.setState({data:[],toggle:'true'})
+            this.openModal('Error','StartDate is after EndDate. Please verify the conditions!!')
         }       
     }
 
@@ -145,7 +168,7 @@ class BannerReport extends Component {
         const {isDisabled} = this.validateForm(this.state);
         const {errors,toggle} = this.state;
         const divStyle = {
-            borderBottom:"1px solid #f44336"
+            borderBottom:"1px solid rgb(218, 137, 137)"
         };
 
         const getVendor = () => {
@@ -328,7 +351,7 @@ class BannerReport extends Component {
                                         <input name="group1" id='two' checked={this.state.checked === 'two'} 
                                             onChange={this.handleRadioButtonChange} 
                                             className='with-gap' type="radio" />
-                                        <span>Transaction Details</span>
+                                        <span>Details</span>
                                     </label>
                                 </p>
                             </div>
@@ -338,8 +361,7 @@ class BannerReport extends Component {
                             </button>
                         </form>
                     </div>
-                    { toggle === 'true' && 
-                        <span className='center red-text'>Start Datetime is after End Datetime</span>}
+                    <MessageModal message={this.state.modalMessage} />
                     <br />
                     <div id="RTSTable">
                         {getTableData()}
