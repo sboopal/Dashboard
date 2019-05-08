@@ -14,7 +14,7 @@ const sql = require('mssql/msnodesqlv8');
 
 // config for your database
 const config = {
-    database: 'rts_prd',
+    database: 'rts_prd1',
     server: 'hbc-ms-sql801',
     // driver: 'msnodesqlv8',
     options: {
@@ -23,9 +23,6 @@ const config = {
 };
 
 app.post('/api/getCount', (req, res) => {
-    console.log('starting sql');
-    // console.log(req.body.selectedBanner);
-
     const {
  selectedBanner, selectedStoreType, selectedVendor, startDate, endDate, startTime, endTime
 } = req.body;
@@ -58,7 +55,6 @@ app.post('/api/getCount', (req, res) => {
                         order by transactionactioncode`;
         }
     }
-    console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -70,8 +66,11 @@ app.post('/api/getCount', (req, res) => {
               }
           });
           sql.close();
-    });
-    console.log('ending sql');
+    }).catch((error) => {
+        console.log(`connection isse ${error}`);
+        sql.close();
+        res.status(600).send(error);
+      });
 });
 
 app.post('/api/getTranDetails', (req, res) => {
@@ -115,12 +114,14 @@ app.post('/api/getTranDetails', (req, res) => {
                       data: result.recordset
                   });
               }
-          }).catch((error) => {
-            console.log(`connection isse ${error}`);
           });
           sql.close();
     }).catch((error) => {
+        sql.close();
         console.log(`connection isse ${error}`);
+        res.status(400).send({
+            error
+        });
       });
 });
 
