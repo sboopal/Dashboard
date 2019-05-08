@@ -139,7 +139,12 @@ class BannerReport extends Component {
                 body: JSON.stringify(this.state)
             })
             .then((res) => {
-                return res.json();
+                if(res.ok){
+                    return res.json();
+                }
+                res.json().then((error) => {
+                    throw Error(error);
+                });
             })
             .then((results) => {
                 this.setState({ data: results.data });
