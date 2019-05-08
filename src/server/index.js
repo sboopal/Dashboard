@@ -14,7 +14,7 @@ const sql = require('mssql/msnodesqlv8');
 
 // config for your database
 const config = {
-    database: 'rts_prd1',
+    database: 'rts_prd',
     server: 'hbc-ms-sql801',
     // driver: 'msnodesqlv8',
     options: {
