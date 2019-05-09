@@ -343,7 +343,7 @@ class BannerReport extends Component {
                             </div>
                             <div className="row">
                                 <h6 className="col s12 m2">Output Type</h6>
-                                <p className="input-field col s6 m3" >
+                                <p className="input-field col s4 m2" >
                                     <label>
                                         <input name="group1" id='one' checked={this.state.checked === 'one'}
                                             onChange={this.handleRadioButtonChange} 
@@ -351,7 +351,7 @@ class BannerReport extends Component {
                                         <span>Count</span>
                                     </label>
                                 </p>
-                                <p className="input-field col s6 m3" >
+                                <p className="input-field col s4 m2" >
                                     <label>
                                         <input name="group1" id='two' checked={this.state.checked === 'two'} 
                                             onChange={this.handleRadioButtonChange} 
