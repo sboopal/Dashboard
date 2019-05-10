@@ -15,7 +15,7 @@ class App extends Component {
         <div>
           <NavbarPage />
           <Switch>
-            <Route exact path="/" render={() => ( <Redirect to="/BannerReport" /> )} />
+            <Route exact path="/" render={() => ( <Redirect to="/StoreReport" /> )} />
             <Route path="/BannerReport" component={BannerReport} />
             <Route path="/StoreReport" component={StoreReport} />
           </Switch>

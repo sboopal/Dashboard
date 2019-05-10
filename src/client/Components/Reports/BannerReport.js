@@ -122,7 +122,7 @@ class BannerReport extends Component {
 
     handleOnSubmit = (e) => {
         e.preventDefault();
-        this.setState({toggle:'false'})
+        
         const sDate = this.state.startDate + " " + this.state.startTime;
         const eDate = this.state.endDate + " " + this.state.endTime;
 
