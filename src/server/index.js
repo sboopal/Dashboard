@@ -74,7 +74,6 @@ app.post('/api/getCount', (req, res) => {
 });
 
 app.post('/api/getTranDetails', (req, res) => {
-
     const {
  selectedBanner, selectedStoreType, selectedVendor, selectedTranStatus,
  startDate, endDate, startTime, endTime
