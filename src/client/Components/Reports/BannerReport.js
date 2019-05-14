@@ -122,11 +122,11 @@ class BannerReport extends Component {
 
     handleOnSubmit = (e) => {
         e.preventDefault();
-        
+
         const sDate = this.state.startDate + " " + this.state.startTime;
         const eDate = this.state.endDate + " " + this.state.endTime;
 
-        if(moment(sDate).isBefore(moment(eDate))){
+        if(moment(sDate).isSameOrBefore(moment(eDate))){
             let URL = '/api/getCount';
             if(this.state.checked === 'two'){
                 URL = '/api/getTranDetails';
@@ -171,7 +171,7 @@ class BannerReport extends Component {
     render(){
         
         const {isDisabled} = this.validateForm(this.state);
-        const {errors,toggle} = this.state;
+        const {errors} = this.state;
         const divStyle = {
             borderBottom:"1px solid rgb(218, 137, 137)"
         };

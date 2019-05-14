@@ -73,6 +73,45 @@ app.post('/api/getCount', (req, res) => {
       });
 });
 
+app.post('/api/getStoreCount', (req, res) => {
+    const {
+ store, terminal, account, amount, invoice, startDate, endDate, startTime, endTime
+} = req.body;
+
+    let sqlQuery = '';
+
+    if (store !== '') {
+        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
+                        and store = '${store}' and terminal = '${terminal}' and amount = '${amount}' and accountdisplay like '%${account}'
+                        group by transactionactioncode
+                        order by transactionactioncode`;
+    } else {
+        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
+                        and invoicenumber = '${invoice}'
+                        group by transactionactioncode
+                        order by transactionactioncode`;
+    }
+    console.log(sqlQuery);
+    const pool = new sql.ConnectionPool(config);
+    pool.connect().then(() => {
+        pool.request().query(sqlQuery, (err, result) => {
+              if (err) { res.send(err); } else {
+                  console.log(result.recordset);
+                  res.send({
+                      data: result.recordset
+                  });
+              }
+          });
+          sql.close();
+    }).catch((error) => {
+        console.log(`connection isse ${error}`);
+        sql.close();
+        res.status(600).send(error);
+      });
+});
+
 app.post('/api/getTranDetails', (req, res) => {
     const {
  selectedBanner, selectedStoreType, selectedVendor, selectedTranStatus,
