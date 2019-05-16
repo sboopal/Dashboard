@@ -89,7 +89,7 @@ class BannerReport extends Component {
             const element = document.getElementById('RTSTable');
             element.scrollIntoView({behavior: 'smooth'});
         }        
-      }
+    }
     validateForm = (state) => {
         let valid = true;
         Object.values(state.errors).forEach(
