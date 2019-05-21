@@ -58,7 +58,12 @@ class StoreReport extends Component {
             autoClose: true
         });
     }
-
+    componentDidUpdate() {
+        if(this.state.data.length > 0){
+            const element = document.getElementById('RTSTable');
+            element.scrollIntoView({behavior: 'smooth'});
+        }        
+    }
     handleOnSubmit = (e) => {
         e.preventDefault();
         console.log(this.state);
@@ -91,11 +96,13 @@ class StoreReport extends Component {
                     if(this.state.data.length === 0)
                     {
                         this.openModal('Warning','No data available for this inputs');
+                        window.scrollTo(0, 0)
                     }
                 })
                 .catch((error) => {
                     this.openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator');
                     console.log('Error in connecting to the database' + error);
+                    window.scrollTo(0, 0)
                 });
             }else{
                 this.openModal('Error','StartDate is after EndDate. Please verify the conditions!!')
@@ -106,6 +113,7 @@ class StoreReport extends Component {
             }
         }else{
             this.openModal('Error','Mandatory fields are not entered. Please check and try again');
+            window.scrollTo(0, 0)
         }
     }
 
@@ -144,7 +152,7 @@ class StoreReport extends Component {
             this.setState({ [id] : moment(value,'hh:mm A').format('HH:mm:ss') })
         }else{
             let {selected} = this.state;
-            selected[id] = 'valid';
+            selected[id] = value.length > 0 ? 'valid' : '';
             if (id !== 'invoice' && value.length > maxLength) {
                 value = value.slice(0, maxLength)
             }
@@ -207,7 +215,7 @@ class StoreReport extends Component {
         else{
             selected.amount = ''
         }
-        this.setState({selected});
+        this.setState({selected,data:[]});
     }
 
     handleRadioButtonChange = (e) => {
@@ -216,79 +224,68 @@ class StoreReport extends Component {
 
     render(){
         const {selected} = this.state;
-        
+        const getColumnValues = (value) => {
+            if(value === 0){
+                return '0 - Approved';
+            }else if(value === 1){
+                return '1 - Declined';
+            }else if(value === 2){
+                return '2 - Offline';
+            }else if(value === 10){
+                return '10 - Timeout';
+            }else{
+                return value;
+            }
+        }
+        const getColumnValuesForDate = (value) => {
+            //const date =  moment(value).tz('UTC').format('YYYY-MM-DD HH:mm:ss');
+            var localTime  = moment.utc(value).toDate();
+            localTime = moment(localTime).add(5,'hours').format('YYYY-MM-DD HH:mm:ss');
+            return localTime;
+        }
         const getTableData = () => {
             const { data } = this.state;
-            const countTableColumns = [
-                {
-                    Header:"Tran Status",
-                    accessor:"Transactionactioncode"
-                },
-                {
-                    Header:"No of Transactions",
-                    accessor:"TranCount"
-                }
-            ];
-            const detailsTableColumn = [
-                {
-                    Header:"Store",
-                    accessor:"Store"
-                },
-                {
-                    Header:"Terminal",
-                    accessor:"Terminal"
-                },
-                {
-                    Header:"Tran Domain",
-                    accessor:"TransactionDomain"
-                },
-                {
-                    Header:"Tran Type",
-                    accessor:"TransactionType"
-                },
-                {
-                    Header:"AccountType",
-                    accessor:"AccountType"
-                },
-                {
-                    Header:"Amount",
-                    accessor:"Amount"
-                },
-                {
-                    Header:"Tran ActionCode",
-                    accessor:"TransactionActionCode"
-                },
-                {
-                    Header:"TransactionIsoResponse",
-                    accessor:"TransactionIsoResponse"
-                },
-                {
-                    Header:"AccountDisplay",
-                    accessor:"AccountDisplay"
-                },
-                {
-                    Header:"SourceLogDateTime",
-                    accessor:"SourceLogDateTime"
-                },
-                {
-                    Header:"Server",
-                    accessor:"Server"
-                },
-                {
-                    Header:"InvoiceNumber",
-                    accessor:"InvoiceNumber"
-                },
-                {
-                    Header:"AuthCode",
-                    accessor:"AuthCode"
-                }
-            ]
+            let columns = [];
+            if(data.length > 0){
+                columns = Object.keys(data[0]).map(key => {
+                    if(key === 'TransactionActionCode'){
+                        return {
+                            Header: 'Transaction Status',
+                            accessor:key,
+                            Cell : row => (
+                                <span>
+                                    {
+                                        getColumnValues(row.value)
+                                    }
+                                </span>
+                            )
+                        }
+                    }else if(key == 'SourceLogDateTime'){
+                        return{
+                            Header: key,
+                            accessor:key,
+                            Cell : row => (
+                                <span>
+                                    {
+                                        getColumnValuesForDate(row.value)
+                                    }
+                                </span>
+                            )
+                        }
+                    }else{
+                        return {
+                            Header: key,
+                            accessor:key
+                        }
+                    }
+                })
+            }
             const pageSize = data.length < 10 ? data.length : 10;
             return(
                 data.length > 0 ? (
                     <ReactTable 
                         data={data}
-                        columns = {this.state.checked === 'one' ? countTableColumns : detailsTableColumn}
+                        columns = {columns}
                         defaultPageSize={pageSize}
                         className='-striped -highlight -bordered' />
                 ): (
@@ -303,7 +300,7 @@ class StoreReport extends Component {
                     <div className="row">
                         <form className="col s12" id="storeReportForm" onSubmit={this.handleOnSubmit}>
                             {/* first row */}
-                            <div className="row">
+                            <div className="row" id='firstRow'>
                                 <div className="col s12 m6 firstrowborder">
                                     {/* firstrow store and register */}
                                     <div className="row">
@@ -345,8 +342,14 @@ class StoreReport extends Component {
                                     </div>
                                 </div>
                                 </div>
-                                <div className="col m1"></div>
+                                {/* vertical divider */}
+                                <div className="col" style={{marginLeft:'10px',marginRight:'10px'}}>
+                                    <div className="row vertical-line"></div>
+                                    <div className="row" style={{paddingTop:'90px'}}> OR </div>
+                                    <div className="row vertical-line"></div>
+                                </div>
                                 <div className="col s12 m5 firstrowborder">
+                                    <div className="row">
                                         <h6 className="col s12 m4 required-field" >Invoice</h6>
                                         <div className="input-field col s12 m6">
                                             <input id="invoice" type="number" className={`${selected.invoice}`} maxLength="4"
@@ -355,6 +358,7 @@ class StoreReport extends Component {
                                                 onKeyPress={this.handleKeyPress} />
                                             <label htmlFor="invoice">Invoice</label>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
                             {/* third row start date */}
