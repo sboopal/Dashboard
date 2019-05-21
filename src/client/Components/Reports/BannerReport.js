@@ -194,78 +194,68 @@ class BannerReport extends Component {
                 </select>
             )
         }
+        const getColumnValues = (value) => {
+            if(value === 0){
+                return '0 - Approved';
+            }else if(value === 1){
+                return '1 - Declined';
+            }else if(value === 2){
+                return '2 - Offline';
+            }else if(value === 10){
+                return '10 - Timeout';
+            }else{
+                return value;
+            }
+        }
+        const getColumnValuesForDate = (value) => {
+            //const date =  moment(value).tz('UTC').format('YYYY-MM-DD HH:mm:ss');
+            var localTime  = moment.utc(value).toDate();
+            localTime = moment(localTime).add(5,'hours').format('YYYY-MM-DD HH:mm:ss');
+            return localTime;
+        }
         const getTableData = () => {
             const { data } = this.state;
-            const countTableColumns = [
-                {
-                    Header:"Tran Status",
-                    accessor:"Transactionactioncode"
-                },
-                {
-                    Header:"No of Transactions",
-                    accessor:"TranCount"
-                }
-            ];
-            const detailsTableColumn = [
-                {
-                    Header:"Store",
-                    accessor:"Store"
-                },
-                {
-                    Header:"Terminal",
-                    accessor:"Terminal"
-                },
-                {
-                    Header:"Tran Domain",
-                    accessor:"TransactionDomain"
-                },
-                {
-                    Header:"Tran Type",
-                    accessor:"TransactionType"
-                },
-                {
-                    Header:"AccountType",
-                    accessor:"AccountType"
-                },
-                {
-                    Header:"Amount",
-                    accessor:"Amount"
-                },
-                {
-                    Header:"Tran ActionCode",
-                    accessor:"TransactionActionCode"
-                },
-                {
-                    Header:"TransactionIsoResponse",
-                    accessor:"TransactionIsoResponse"
-                },
-                {
-                    Header:"AccountDisplay",
-                    accessor:"AccountDisplay"
-                },
-                {
-                    Header:"SourceLogDateTime",
-                    accessor:"SourceLogDateTime"
-                },
-                {
-                    Header:"Server",
-                    accessor:"Server"
-                },
-                {
-                    Header:"InvoiceNumber",
-                    accessor:"InvoiceNumber"
-                },
-                {
-                    Header:"AuthCode",
-                    accessor:"AuthCode"
-                }
-            ]
+            let columns = [];
+            if(data.length > 0){
+                columns = Object.keys(data[0]).map(key => {
+                    if(key === 'TransactionActionCode'){
+                        return {
+                            Header: 'Transaction Status',
+                            accessor:key,
+                            Cell : row => (
+                                <span>
+                                    {
+                                        getColumnValues(row.value)
+                                    }
+                                </span>
+                            )
+                        }
+                    }else if(key == 'SourceLogDateTime'){
+                        return{
+                            Header: key,
+                            accessor:key,
+                            Cell : row => (
+                                <span>
+                                    {
+                                        getColumnValuesForDate(row.value)
+                                    }
+                                </span>
+                            )
+                        }
+                    }else{
+                        return {
+                            Header: key,
+                            accessor:key
+                        }
+                    }
+                })
+            }
             const pageSize = data.length < 10 ? data.length : 10;
             return(
                 data.length > 0 ? (
                     <ReactTable 
                         data={data}
-                        columns = {this.state.checked === 'one' ? countTableColumns : detailsTableColumn}
+                        columns = {columns}
                         defaultPageSize={pageSize}
                         className='-striped -highlight -bordered' />
                 ): (

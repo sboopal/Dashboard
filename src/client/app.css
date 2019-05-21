@@ -44,3 +44,23 @@ form button, form h5{
   border: 2px solid rgb(110, 150, 150);
   padding: 5px;
 }
+.ReactTable .rt-table{
+  border: 1px solid rgb(50, 158, 91);
+}
+.ReactTable .rt-thead.-header {
+  background-color: #658f8b;
+  color: #f9f3f3;
+}
+.ReactTable.-striped .rt-tr {
+  text-align: CENTER;
+}
+.ReactTable.-striped .rt-tr.-odd  {
+  background: rgba(158, 158, 158, 0.41);
+}
+div.vertical-line{
+  width: 1px; /* Line width */
+  border-right: 1px solid #26a69a;
+  height: 10%;
+  position: absolute;
+  padding-left: 10px;
+}

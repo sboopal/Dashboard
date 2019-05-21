@@ -32,7 +32,7 @@ app.post('/api/getCount', (req, res) => {
 
     if (selectedBanner === 'Saks') {
         serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
-        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and server in ${serverNames} and Vendor = '${selectedVendor}'
                         group by transactionactioncode
@@ -41,14 +41,14 @@ app.post('/api/getCount', (req, res) => {
         serverNames = '(\'RTS1\',\'RTS2\')';
         if (selectedStoreType === 'Online') {
             const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
-            sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+            sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
             where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
                         and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}'
                         group by transactionactioncode
                         order by transactionactioncode`;
         } else {
             const storeNumber = '(\'91963\',\'9199\')';
-            sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+            sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
                         and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber}
                         group by transactionactioncode
@@ -59,7 +59,7 @@ app.post('/api/getCount', (req, res) => {
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
-                  console.log(result.recordset);
+                //   console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
@@ -67,7 +67,7 @@ app.post('/api/getCount', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        console.log(`connection isse ${error}`);
+        // console.log(`connection isse ${error}`);
         sql.close();
         res.status(600).send(error);
       });
@@ -91,13 +91,13 @@ app.post('/api/getStoreCount', (req, res) => {
         if (amount !== '') {
             queryConditionLine = `${queryConditionLine} and amount = '${amount}'`;
         }
-        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and ${queryConditionLine}
                         group by transactionactioncode
                         order by transactionactioncode`;
     } else {
-        sqlQuery = `select Transactionactioncode,count(*) as TranCount from transactiondetail 
+        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and invoicenumber = '${invoice}'
                         group by transactionactioncode
@@ -108,7 +108,7 @@ app.post('/api/getStoreCount', (req, res) => {
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
-                  console.log(result.recordset);
+                  // console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
@@ -116,7 +116,7 @@ app.post('/api/getStoreCount', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        console.log(`connection isse ${error}`);
+        // console.log(`connection isse ${error}`);
         sql.close();
         res.status(600).send(error);
       });
@@ -166,7 +166,7 @@ app.post('/api/getTranDetails', (req, res) => {
           sql.close();
     }).catch((error) => {
         sql.close();
-        console.log(`connection isse ${error}`);
+        // console.log(`connection isse ${error}`);
         res.status(400).send({
             error
         });
@@ -204,7 +204,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
-                  console.log(result.recordset);
+                  // console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
@@ -212,7 +212,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        console.log(`connection isse ${error}`);
+        // console.log(`connection isse ${error}`);
         sql.close();
         res.status(600).send(error);
       });
