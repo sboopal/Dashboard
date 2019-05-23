@@ -2,9 +2,10 @@
 /* eslint-disable indent */
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
-
+app.use(cors());
 app.use(express.static('dist'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -21,6 +22,10 @@ const config = {
         trustedConnection: true
     }
 };
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 
 app.post('/api/getCount', (req, res) => {
     const {
@@ -133,7 +138,7 @@ app.post('/api/getTranDetails', (req, res) => {
 
     if (selectedBanner === 'Saks') {
         serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
-        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and server in ${serverNames} and Vendor = '${selectedVendor}' and TransactionActionCode='${selectedTranStatus}'
                         order by transactionactioncode`;
@@ -141,13 +146,13 @@ app.post('/api/getTranDetails', (req, res) => {
         serverNames = '(\'RTS1\',\'RTS2\')';
         if (selectedStoreType === 'Online') {
             const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
-            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
             where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
                         and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}' and TransactionActionCode='${selectedTranStatus}'
                         order by transactionactioncode`;
         } else {
             const storeNumber = '(\'91963\',\'9199\')';
-            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
                         and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber} and TransactionActionCode='${selectedTranStatus}'
                         order by transactionactioncode`;
@@ -191,11 +196,11 @@ app.post('/api/getStoreTranDetails', (req, res) => {
         if (amount !== '') {
             queryConditionLine = `${queryConditionLine} and amount = '${amount}'`;
         }
-        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and ${queryConditionLine}`;
     } else {
-        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and invoicenumber = '${invoice}'`;
     }

@@ -72,9 +72,9 @@ class StoreReport extends Component {
         const valid = this.validateForm(this.state);
         if(valid){
             if(moment(sDate).isSameOrBefore(moment(eDate))){
-                let URL = '/api/getStoreCount';
+                let URL = 'http://localhost:8080/api/getStoreCount';
                 if(this.state.checked === 'two'){
-                    URL = '/api/getStoreTranDetails';
+                    URL = 'http://localhost:8080/api/getStoreTranDetails';
                 }
                 fetch(URL,{
                     method: 'POST',
@@ -151,7 +151,7 @@ class StoreReport extends Component {
         if((e.target.id).includes('Time')){
             this.setState({ [id] : moment(value,'hh:mm A').format('HH:mm:ss') })
         }else{
-            let {selected} = this.state;
+            let {selected,invoice} = this.state;
             selected[id] = value.length > 0 ? 'valid' : '';
             if (id !== 'invoice' && value.length > maxLength) {
                 value = value.slice(0, maxLength)
@@ -167,6 +167,7 @@ class StoreReport extends Component {
                 selected['terminal'] = '';
                 selected['account'] = '';
                 selected['amount'] = '';
+                value = value.replace(/^0+/,'');
                 this.setState({store:'',terminal:'',account:'',amount:''});
             }
             this.setState({ [id] : value, selected })
