@@ -64,3 +64,9 @@ div.vertical-line{
   position: absolute;
   padding-left: 10px;
 }
+.horizontal-line{
+  width: 48%; /* Line width */
+  height: 1px;
+  position: absolute;
+  border-bottom: 1px solid #26a69a;
+}
