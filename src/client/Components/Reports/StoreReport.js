@@ -183,16 +183,6 @@ class StoreReport extends Component {
         }
     }
 
-    openModal = (header,content) => {
-        let modalMessage = this.state.modalMessage;
-        modalMessage['header'] = header;
-        modalMessage['content'] = content;
-        this.setState({data:[],modalMessage})
-        const elem = document.getElementById('mymodal');
-        const instance = M.Modal.init(elem, {dismissible: false});
-        instance.open();
-    }
-
     handleDecimalChange = (e) => {
         const start = e.target.selectionStart;
         let val = e.target.value;
