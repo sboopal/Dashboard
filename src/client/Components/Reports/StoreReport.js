@@ -2,10 +2,10 @@
 import React, { Component } from 'react';
 import 'materialize-css/dist/js/materialize.min.js'
 import 'materialize-css/dist/css/materialize.min.css'
-import M from "materialize-css";
 import moment from 'moment';
 import MessageModal from '../Layouts/Modal';
-import ReactTable from 'react-table';
+import LoadingScreen from 'react-loading-screen';
+import {getTableData,openModal,setDates,dividers} from '../Globalfunctions/globalFunctions';
 
 // eslint-disable-next-line react/prefer-stateless-function
 class StoreReport extends Component {
@@ -36,27 +36,12 @@ class StoreReport extends Component {
         modalMessage : {
             header : '',
             content : ''
-        }
+        },
+        loadingScreen : false
     }
 
     componentDidMount() {
-        //console.log(this.state.data);
-        M.AutoInit();
-        var context = this;
-        var elems = document.querySelectorAll(".startDateset");
-        M.Datepicker.init(elems, {
-            onSelect: function(date) {
-                context.setState({ startDate: moment(date).format('YYYY-MM-DD'),data:[] });
-            },
-            autoClose: true
-        });
-        var elems1 = document.querySelectorAll(".endDateset");
-        M.Datepicker.init(elems1, {
-            onSelect: function(date) {
-                context.setState({ endDate: moment(date).format('YYYY-MM-DD'),data:[] });
-            },
-            autoClose: true
-        });
+        setDates(this);
     }
     componentDidUpdate() {
         if(this.state.data.length > 0){
@@ -66,7 +51,6 @@ class StoreReport extends Component {
     }
     handleOnSubmit = (e) => {
         e.preventDefault();
-        console.log(this.state);
         const sDate = this.state.startDate + " " + this.state.startTime;
         const eDate = this.state.endDate + " " + this.state.endTime;
         const valid = this.validateForm(this.state);
@@ -76,6 +60,7 @@ class StoreReport extends Component {
                 if(this.state.checked === 'two'){
                     URL = 'http://localhost:8080/api/getStoreTranDetails';
                 }
+                this.setState({loadingScreen : true});
                 fetch(URL,{
                     method: 'POST',
                     headers: {
@@ -92,27 +77,28 @@ class StoreReport extends Component {
                     });
                 })
                 .then((results) => {
-                    this.setState({ data: results.data });
+                    this.setState({ data: results.data,loadingScreen:false });
                     if(this.state.data.length === 0)
                     {
-                        this.openModal('Warning','No data available for this inputs');
+                        openModal('Warning','No data available for this inputs',this);
                         window.scrollTo(0, 0)
                     }
                 })
                 .catch((error) => {
-                    this.openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator');
+                    this.setState({loadingScreen : false});
+                    openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator',this);
                     console.log('Error in connecting to the database' + error);
                     window.scrollTo(0, 0)
                 });
             }else{
-                this.openModal('Error','StartDate is after EndDate. Please verify the conditions!!')
+                openModal('Error','StartDate is after EndDate. Please verify the conditions!!',this)
                 let {selected} = this.state;
                 const id = moment(this.state.startDate).isSame(moment(this.state.endDate)) ? 'startTime' : 'startDate';
-                selected[id] = 'invlaid';
+                selected[id] = 'invalid';
                 this.setState({selected});
             }
         }else{
-            this.openModal('Error','Mandatory fields are not entered. Please check and try again');
+            openModal('Error','Mandatory fields are not entered. Please check and try again',this);
             window.scrollTo(0, 0)
         }
     }
@@ -151,26 +137,28 @@ class StoreReport extends Component {
         if((e.target.id).includes('Time')){
             this.setState({ [id] : moment(value,'hh:mm A').format('HH:mm:ss') })
         }else{
-            let {selected,invoice} = this.state;
-            selected[id] = value.length > 0 ? 'valid' : '';
-            if (id !== 'invoice' && value.length > maxLength) {
-                value = value.slice(0, maxLength)
-            }
-            if(id === 'store' || id === 'terminal' || id === 'account' || id === 'amount'){
-                if(id === 'store'){
-                    selected['invoice'] = '';
+            if(value === "" || Math.sign(value) === 1 ){
+                let {selected} = this.state;
+                selected[id] = value.length > 0 ? 'valid' : '';
+                if (id !== 'invoice' && value.length > maxLength) {
+                    value = value.slice(0, maxLength)
                 }
-                this.setState({invoice : ''})
+                if(id === 'store' || id === 'terminal' || id === 'account' || id === 'amount'){
+                    if(id === 'store'){
+                        selected['invoice'] = '';
+                    }
+                    this.setState({invoice : ''})
+                }
+                if(id === 'invoice'){
+                    selected['store'] = '';
+                    selected['terminal'] = '';
+                    selected['account'] = '';
+                    selected['amount'] = '';
+                    value = value.replace(/^0+/,'');
+                    this.setState({store:'',terminal:'',account:'',amount:''});
+                }
+                this.setState({ [id] : value, selected })
             }
-            if(id === 'invoice'){
-                selected['store'] = '';
-                selected['terminal'] = '';
-                selected['account'] = '';
-                selected['amount'] = '';
-                value = value.replace(/^0+/,'');
-                this.setState({store:'',terminal:'',account:'',amount:''});
-            }
-            this.setState({ [id] : value, selected })
         }
         this.setState({data:[]})
     }
@@ -215,78 +203,16 @@ class StoreReport extends Component {
 
     render(){
         const {selected} = this.state;
-        const getColumnValues = (value) => {
-            if(value === 0){
-                return '0 - Approved';
-            }else if(value === 1){
-                return '1 - Declined';
-            }else if(value === 2){
-                return '2 - Offline';
-            }else if(value === 10){
-                return '10 - Timeout';
-            }else{
-                return value;
-            }
-        }
-        const getColumnValuesForDate = (value) => {
-            //const date =  moment(value).tz('UTC').format('YYYY-MM-DD HH:mm:ss');
-            var localTime  = moment.utc(value).toDate();
-            localTime = moment(localTime).add(5,'hours').format('YYYY-MM-DD HH:mm:ss');
-            return localTime;
-        }
-        const getTableData = () => {
-            const { data } = this.state;
-            let columns = [];
-            if(data.length > 0){
-                columns = Object.keys(data[0]).map(key => {
-                    if(key === 'TransactionActionCode'){
-                        return {
-                            Header: 'Transaction Status',
-                            accessor:key,
-                            Cell : row => (
-                                <span>
-                                    {
-                                        getColumnValues(row.value)
-                                    }
-                                </span>
-                            )
-                        }
-                    }else if(key == 'SourceLogDateTime'){
-                        return{
-                            Header: key,
-                            accessor:key,
-                            Cell : row => (
-                                <span>
-                                    {
-                                        getColumnValuesForDate(row.value)
-                                    }
-                                </span>
-                            )
-                        }
-                    }else{
-                        return {
-                            Header: key,
-                            accessor:key
-                        }
-                    }
-                })
-            }
-            const pageSize = data.length < 10 ? data.length : 10;
-            return(
-                data.length > 0 ? (
-                    <ReactTable 
-                        data={data}
-                        columns = {columns}
-                        defaultPageSize={pageSize}
-                        className='-striped -highlight -bordered' />
-                ): (
-                    null
-                )
-            ) 
-        }
 
         return(
             <div>
+                <LoadingScreen
+                    loading = {this.state.loadingScreen}
+                    bgColor='#f1f1f1bf'
+                    spinnerColor='#9ee5f8'
+                    textColor='#676767'
+                    text='Loading... Please wait'
+                ></LoadingScreen>
                 <div className="container">
                     <div className="row">
                         <form className="col s12" id="storeReportForm" onSubmit={this.handleOnSubmit}>
@@ -334,11 +260,7 @@ class StoreReport extends Component {
                                 </div>
                                 </div>
                                 {/* vertical divider */}
-                                <div className="col" style={{marginLeft:'10px',marginRight:'10px'}}>
-                                    <div className="row vertical-line"></div>
-                                    <div className="row" style={{paddingTop:'90px'}}> OR </div>
-                                    <div className="row vertical-line"></div>
-                                </div>
+                                {dividers()}
                                 <div className="col s12 m5 firstrowborder">
                                     <div className="row">
                                         <h6 className="col s12 m4 required-field" >Invoice</h6>
@@ -412,7 +334,7 @@ class StoreReport extends Component {
                     <br />
                     <br />
                     <div id="RTSTable">
-                        {getTableData()}
+                        {getTableData(this.state.data)}
                     </div>
                 </div>
             </div>
