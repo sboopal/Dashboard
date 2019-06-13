@@ -22,8 +22,13 @@ const config = {
         trustedConnection: true
     }
 };
+// const config = {
+// eslint-disable-next-line max-len
+//     connectionString: 'Driver=SQL Server;Server=hbc-ms-sql801;Database=rts_prd;username=intranet\\vndbsubramani;password=Kanikajun@24;Trusted_Connection=true;'
+// };
 
 app.get('/', (req, res) => {
+    console.log('testing');
     res.send('Hello World!');
 });
 
@@ -34,32 +39,25 @@ app.post('/api/getCount', (req, res) => {
 
     let serverNames = '';
     let sqlQuery = '';
-
+    let queryConditionLine = '';
     if (selectedBanner === 'Saks') {
         serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
-        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
-                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
-                        and server in ${serverNames} and Vendor = '${selectedVendor}'
-                        group by transactionactioncode
-                        order by transactionactioncode`;
     } else {
         serverNames = '(\'RTS1\',\'RTS2\')';
         if (selectedStoreType === 'Online') {
             const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
-            sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
-            where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
-                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}'
-                        group by transactionactioncode
-                        order by transactionactioncode`;
+            queryConditionLine = `and store = '${storeNumber}' `;
         } else {
             const storeNumber = '(\'91963\',\'9199\')';
-            sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
-                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
-                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber}
-                        group by transactionactioncode
-                        order by transactionactioncode`;
+            queryConditionLine = `and store not in ${storeNumber}`;
         }
     }
+    sqlQuery = `select TransactionType,Vendor,TransactionActionCode ,count(*) as TranCount from transactiondetail 
+                    where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
+                    and server in ${serverNames} and Vendor = '${selectedVendor}' ${queryConditionLine} 
+                    group by TransactionType,Vendor,transactionactioncode
+                    order by TransactionType,Vendor,transactionactioncode `;
+    console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -72,7 +70,7 @@ app.post('/api/getCount', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        // console.log(`connection isse ${error}`);
+        // console.log(`connection issue ${error}`);
         sql.close();
         res.status(600).send(error);
       });
@@ -84,7 +82,6 @@ app.post('/api/getStoreCount', (req, res) => {
 } = req.body;
 
     let sqlQuery = '';
-
     if (store !== '') {
         let queryConditionLine = `store = '${store}'`;
         if (terminal !== '') {
@@ -96,24 +93,24 @@ app.post('/api/getStoreCount', (req, res) => {
         if (amount !== '') {
             queryConditionLine = `${queryConditionLine} and amount = '${amount}'`;
         }
-        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
+        sqlQuery = `select TransactionType,Vendor,TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and ${queryConditionLine}
-                        group by transactionactioncode
-                        order by transactionactioncode`;
+                        group by TransactionType,Vendor,transactionactioncode
+                        order by TransactionType,Vendor,transactionactioncode`;
     } else {
-        sqlQuery = `select TransactionActionCode ,count(*) as TranCount from transactiondetail 
+        sqlQuery = `select TransactionType,Vendor,TransactionActionCode ,count(*) as TranCount from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and invoicenumber = '${invoice}'
-                        group by transactionactioncode
-                        order by transactionactioncode`;
+                        group by TransactionType,Vendor,transactionactioncode
+                        order by TransactionType,Vendor,transactionactioncode`;
     }
     console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
+    // console.log(pool);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
               if (err) { res.send(err); } else {
-                  // console.log(result.recordset);
                   res.send({
                       data: result.recordset
                   });
@@ -121,9 +118,9 @@ app.post('/api/getStoreCount', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        // console.log(`connection isse ${error}`);
+        console.log(`connection isse ${error}`);
         sql.close();
-        res.status(600).send(error);
+        res.status(400).send(error);
       });
 });
 
@@ -135,29 +132,32 @@ app.post('/api/getTranDetails', (req, res) => {
 
     let serverNames = '';
     let sqlQuery = '';
+    let transactionActionCode = '';
+    let queryConditionLine = '';
+
+    if (selectedTranStatus === '11') {
+        transactionActionCode = 'TransactionActionCode not in (\'0\',\'1\',\'2\',\'10\')';
+    } else {
+        transactionActionCode = `TransactionActionCode = '${selectedTranStatus}'`;
+    }
 
     if (selectedBanner === 'Saks') {
-        serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';
-        sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
-                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
-                        and server in ${serverNames} and Vendor = '${selectedVendor}' and TransactionActionCode='${selectedTranStatus}'
-                        order by transactionactioncode`;
+        serverNames = '(\'RTSP05\',\'RTSP06\',\'RTSP07\')';                        
     } else {
         serverNames = '(\'RTS1\',\'RTS2\')';
         if (selectedStoreType === 'Online') {
             const storeNumber = selectedBanner === 'Bay' ? '91963' : '9199';
-            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
-            where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
-                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store = '${storeNumber}' and TransactionActionCode='${selectedTranStatus}'
-                        order by transactionactioncode`;
+            queryConditionLine = `store = '${storeNumber}'`;
         } else {
             const storeNumber = '(\'91963\',\'9199\')';
-            sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
-                        where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}'
-                        and server in ${serverNames} and Vendor = '${selectedVendor}' and store not in ${storeNumber} and TransactionActionCode='${selectedTranStatus}'
-                        order by transactionactioncode`;
+            queryConditionLine = `store not in ${storeNumber} `;
         }
     }
+    sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
+                    where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
+                    and server in ${serverNames} and Vendor = '${selectedVendor}' and ${transactionActionCode} and ${queryConditionLine}
+                    order by transactionactioncode`;
+    console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -219,7 +219,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
     }).catch((error) => {
         // console.log(`connection isse ${error}`);
         sql.close();
-        res.status(600).send(error);
+        res.status(400).send(error);
       });
 });
 

@@ -41,7 +41,7 @@ class StoreReport extends Component {
     }
 
     componentDidMount() {
-        setDates(this);
+        setDates(this,'store');
     }
     componentDidUpdate() {
         if(this.state.data.length > 0){
@@ -54,12 +54,11 @@ class StoreReport extends Component {
         const sDate = this.state.startDate + " " + this.state.startTime;
         const eDate = this.state.endDate + " " + this.state.endTime;
         const valid = this.validateForm(this.state);
+        var Config = require('Config');
+        let URL = Config.serverUrl;
         if(valid){
             if(moment(sDate).isSameOrBefore(moment(eDate))){
-                let URL = 'http://localhost:8080/api/getStoreCount';
-                if(this.state.checked === 'two'){
-                    URL = 'http://localhost:8080/api/getStoreTranDetails';
-                }
+                URL = this.state.checked === 'one' ? URL + '/getStoreCount' : URL + '/getStoreTranDetails'
                 this.setState({loadingScreen : true});
                 fetch(URL,{
                     method: 'POST',
@@ -121,7 +120,7 @@ class StoreReport extends Component {
                     selected['store'] = 'invalid';
                     selected['invoice'] = 'invalid';
                 }
-              }else if(errors[key] === '' && key !== 'invoice') {
+              }else if(errors[key] === '' && key !== 'invoice'){
                   selected[key] = 'invalid'
                   valid = false;
                 }
@@ -202,8 +201,11 @@ class StoreReport extends Component {
     }
 
     render(){
-        const {selected} = this.state;
-
+        const {selected,startDate} = this.state;
+        let isEndDateDisabled = true;
+        if(startDate){
+            isEndDateDisabled = false;
+        }
         return(
             <div>
                 <LoadingScreen
@@ -293,12 +295,12 @@ class StoreReport extends Component {
                             <div className="row">
                                 <h6 className="col s12 m2 required-field">End Date</h6>
                                 <div className="input-field col s6 m3">
-                                    <input id="endDate" type="text" 
+                                    <input id="endDate" type="text" disabled={isEndDateDisabled}
                                         className={`datepicker endDateset validate ${selected.endDate}`} />
                                     <label htmlFor="endDate">Date</label>
                                 </div>
                                 <div className="input-field col s6 m3">
-                                    <input id="endTime" type="text" 
+                                    <input id="endTime" type="text" disabled={isEndDateDisabled}
                                         className={`timepicker validate ${selected.endTime}`} 
                                         onSelect={this.handleChange} />
                                     <label htmlFor="endTime">Time</label> 

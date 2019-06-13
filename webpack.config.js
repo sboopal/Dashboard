@@ -42,6 +42,13 @@ module.exports = {
     },
     historyApiFallback: true
   },
+  externals: {
+    'Config': JSON.stringify(process.env.NODE_ENV === 'production' ? {
+      serverUrl: "http://localhost:8081/api"
+    } : {
+      serverUrl: "http://localhost:8080/api"
+    })
+  },
   plugins: [
     new CleanWebpackPlugin([outputDirectory]),
     new HtmlWebpackPlugin({
