@@ -121,22 +121,29 @@ class BannerReport extends Component {
             .then((res) => {
                 if(res.ok){
                     return res.json();
+                }else{
+                    throw res.status;
                 }
-                res.json().then((error) => {
-                    throw Error(error);
-                });
             })
             .then((results) => {
-                this.setState({ data: results.data,loadingScreen : false });
-                if(this.state.data.length === 0)
+                if(typeof results.data === 'undefined')
                 {
-                    openModal('Warning','No data available for this inputs',this);
+                    this.setState({loadingScreen : false});
+                    openModal('Error','Unable to retrieve data from database. Please contact system admin',this);
+                    window.scrollTo(0, 0)
+                }else if(results.data.length === 0) {
+                    this.setState({loadingScreen : false});
+                    openModal('Error','No data available for this input',this);
+                    window.scrollTo(0, 0)
+                }
+                else{
+                    this.setState({ data: results.data,loadingScreen:false });
                 }
             })
             .catch((error) => {
                 this.setState({loadingScreen : false});
                 openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator',this);
-                console.log('Error in connecting to the database' + error);
+                //console.log('Error in connecting to the database' + error);
             });
         }else{
             openModal('Error','StartDate is after EndDate. Please verify the conditions!!',this)

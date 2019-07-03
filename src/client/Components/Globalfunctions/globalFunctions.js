@@ -97,10 +97,13 @@ const setDates = (component,reportType) => {
                     errors['startDate'] = (date instanceof Date) ? 'true': 'false';
                 }
                 context.setState({ startDate: moment(date).format('YYYY-MM-DD'),data:[] });
-                const startDate = moment(date).add(1,'days').format('YYYY-MM-DD');
+                let startDate = moment(date).add(1,'days').format('YYYY-MM-DD');
                 let endDate = moment(date).add(2,'days').format('YYYY-MM-DD');
                 if(moment(endDate).isAfter(moment())){
-                    endDate = moment().format('YYYY-MM-DD');
+                    endDate = moment().add(1,'days').format('YYYY-MM-DD');
+                }
+                if(moment(startDate).isAfter(moment())){
+                    startDate = moment().add(1,'days').format('YYYY-MM-DD');
                 }
                 M.Datepicker.init(elems1, {
                     onSelect: function(date) {

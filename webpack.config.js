@@ -44,7 +44,7 @@ module.exports = {
   },
   externals: {
     'Config': JSON.stringify(process.env.NODE_ENV === 'production' ? {
-      serverUrl: "http://localhost:8081/api"
+      serverUrl: "http://localhost:9091/api"
     } : {
       serverUrl: "http://localhost:8080/api"
     })

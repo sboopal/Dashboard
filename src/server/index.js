@@ -22,6 +22,14 @@ const config = {
         trustedConnection: true
     }
 };
+const configdev = {
+    database: 'rts_dev',
+    server: 'hbc-ms-sql801d',
+    // driver: 'msnodesqlv8',
+    options: {
+        trustedConnection: true
+    }
+};
 // const config = {
 // eslint-disable-next-line max-len
 //     connectionString: 'Driver=SQL Server;Server=hbc-ms-sql801;Database=rts_prd;username=intranet\\vndbsubramani;password=Kanikajun@24;Trusted_Connection=true;'
@@ -57,7 +65,7 @@ app.post('/api/getCount', (req, res) => {
                     and server in ${serverNames} and Vendor = '${selectedVendor}' ${queryConditionLine} 
                     group by TransactionType,Vendor,transactionactioncode
                     order by TransactionType,Vendor,transactionactioncode `;
-    console.log(sqlQuery);
+    // console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -105,7 +113,7 @@ app.post('/api/getStoreCount', (req, res) => {
                         group by TransactionType,Vendor,transactionactioncode
                         order by TransactionType,Vendor,transactionactioncode`;
     }
-    console.log(sqlQuery);
+    // console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     // console.log(pool);
     pool.connect().then(() => {
@@ -118,7 +126,7 @@ app.post('/api/getStoreCount', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        console.log(`connection isse ${error}`);
+        console.log(`connection issue ${error}`);
         sql.close();
         res.status(400).send(error);
       });
@@ -157,7 +165,7 @@ app.post('/api/getTranDetails', (req, res) => {
                     where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                     and server in ${serverNames} and Vendor = '${selectedVendor}' and ${transactionActionCode} and ${queryConditionLine}
                     order by transactionactioncode`;
-    console.log(sqlQuery);
+    // console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -171,7 +179,7 @@ app.post('/api/getTranDetails', (req, res) => {
           sql.close();
     }).catch((error) => {
         sql.close();
-        // console.log(`connection isse ${error}`);
+        // console.log(`connection issue ${error}`);
         res.status(400).send({
             error
         });
@@ -204,7 +212,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
                         and invoicenumber = '${invoice}'`;
     }
-    console.log(sqlQuery);
+    // console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
     pool.connect().then(() => {
         pool.request().query(sqlQuery, (err, result) => {
@@ -217,7 +225,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
           });
           sql.close();
     }).catch((error) => {
-        // console.log(`connection isse ${error}`);
+        // console.log(`connection issue ${error}`);
         sql.close();
         res.status(400).send(error);
       });
