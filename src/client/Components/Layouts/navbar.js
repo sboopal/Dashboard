@@ -6,9 +6,9 @@ import { Link,NavLink } from 'react-router-dom';
 
 class NavbarPage extends Component {
 
-    componentDidMount(){
-        console.log("test");
-    }
+    // componentDidMount(){
+    //     console.log("test");
+    // }
 
     render(){
         return (

@@ -210,7 +210,7 @@ app.post('/api/getStoreTranDetails', (req, res) => {
     } else {
         sqlQuery = `select Store,Terminal,TransactionDomain,TransactionType,Vendor,VendorNode,AccountType,Amount,TransactionActionCode,TransactionIsoResponse,AccountDisplay,SourceLogDateTime,Server,InvoiceNumber,AuthCode from transactiondetail 
                         where SourceLogDateTime >= '${startDate} ${startTime}' and SourceLogDateTime <= '${endDate} ${endTime}' 
-                        and invoicenumber = '${invoice}'`;
+                        and invoicenumber like '${invoice}%'`;
     }
     // console.log(sqlQuery);
     const pool = new sql.ConnectionPool(config);
