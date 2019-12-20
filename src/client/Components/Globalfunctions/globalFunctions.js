@@ -85,21 +85,40 @@ const openModal = (header,content,component) => {
     instance.open();
 }
 
-const setDates = (component) => {
+const setDates = (component,reportType) => {
     M.AutoInit();
         var context = component;
         var elems = document.querySelectorAll(".startDateset");
+        var elems1 = document.querySelectorAll(".endDateset");
         M.Datepicker.init(elems, {
             onSelect: function(date) {
+                if(reportType === 'banner'){
+                    let errors = context.state.errors;	
+                    errors['startDate'] = (date instanceof Date) ? 'true': 'false';
+                }
                 context.setState({ startDate: moment(date).format('YYYY-MM-DD'),data:[] });
+                let startDate = moment(date).add(1,'days').format('YYYY-MM-DD');
+                let endDate = moment(date).add(2,'days').format('YYYY-MM-DD');
+                if(moment(endDate).isAfter(moment())){
+                    endDate = moment().add(1,'days').format('YYYY-MM-DD');
+                }
+                if(moment(startDate).isAfter(moment())){
+                    startDate = moment().add(1,'days').format('YYYY-MM-DD');
+                }
+                M.Datepicker.init(elems1, {
+                    onSelect: function(date) {
+                        if(reportType === 'banner'){
+                            let errors = context.state.errors;	
+                            errors['endDate'] = (date instanceof Date) ? 'true': 'false';
+                        }
+                        context.setState({ endDate: moment(date).format('YYYY-MM-DD'),data:[] });
+                    },
+                    minDate: new Date(startDate),
+                    maxDate: new Date(endDate),
+                    autoClose: true
+                });
             },
-            autoClose: true
-        });
-        var elems1 = document.querySelectorAll(".endDateset");
-        M.Datepicker.init(elems1, {
-            onSelect: function(date) {
-                context.setState({ endDate: moment(date).format('YYYY-MM-DD'),data:[] });
-            },
+            maxDate: new Date(),
             autoClose: true
         });
 }

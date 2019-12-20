@@ -42,11 +42,18 @@ module.exports = {
     },
     historyApiFallback: true
   },
+  externals: {
+    'Config': JSON.stringify(process.env.NODE_ENV === 'production' ? {
+      serverUrl: "http://localhost:9091/api"
+    } : {
+      serverUrl: "http://localhost:8080/api"
+    })
+  },
   plugins: [
     new CleanWebpackPlugin([outputDirectory]),
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico'
-    })
+    }),
   ]
 };

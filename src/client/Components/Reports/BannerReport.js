@@ -48,7 +48,7 @@ class BannerReport extends Component {
             selectedBanner : 'false',
             selectedStoreType:'false',
             selectedVendor:'false',
-            selectedTranStatus:'false',
+            selectedTranStatus:'true',
             startDate:'false',
             startTime:'false',
             endDate:'false',
@@ -62,7 +62,7 @@ class BannerReport extends Component {
     }
   
     componentDidMount() {
-        setDates(this);
+        setDates(this,'banner');
     }
     componentDidUpdate() {
         if(this.state.data.length > 0){
@@ -72,9 +72,20 @@ class BannerReport extends Component {
     }
     validateForm = (state) => {
         let valid = true;
-        Object.values(state.errors).forEach(
-          (val) => val === 'false' && (valid = false)
-        );
+        const errors = state.errors;
+        // Object.values(state.errors).forEach(
+        //   (val) => val === 'false' && (valid = false)
+        // );
+        Object.keys(errors).forEach(
+            (key) => {
+                if(key === 'selectedTranStatus' && state.checked === 'two' && errors[key] === 'false'){
+                    valid = false;
+                }
+                else if(key !== 'selectedTranStatus' && errors[key] === 'false' ){
+                     valid = false
+                }
+            }
+        )
         return {isDisabled : valid};
     }
 
@@ -95,13 +106,11 @@ class BannerReport extends Component {
 
         const sDate = this.state.startDate + " " + this.state.startTime;
         const eDate = this.state.endDate + " " + this.state.endTime;
-
+        var Config = require('Config');
+        let URL = Config.serverUrl;
         if(moment(sDate).isSameOrBefore(moment(eDate))){
             this.setState({loadingScreen : true});
-            let URL = '/api/getCount';
-            if(this.state.checked === 'two'){
-                URL = '/api/getTranDetails';
-            }
+            URL = this.state.checked === 'one' ? URL + '/getCount' : URL + '/getTranDetails';
             fetch(URL,{
                 method: 'POST',
                 headers: {
@@ -112,22 +121,29 @@ class BannerReport extends Component {
             .then((res) => {
                 if(res.ok){
                     return res.json();
+                }else{
+                    throw res.status;
                 }
-                res.json().then((error) => {
-                    throw Error(error);
-                });
             })
             .then((results) => {
-                this.setState({ data: results.data,loadingScreen : false });
-                if(this.state.data.length === 0)
+                if(typeof results.data === 'undefined')
                 {
-                    openModal('Warning','No data available for this inputs',this);
+                    this.setState({loadingScreen : false});
+                    openModal('Error','Unable to retrieve data from database. Please contact system admin',this);
+                    window.scrollTo(0, 0)
+                }else if(results.data.length === 0) {
+                    this.setState({loadingScreen : false});
+                    openModal('Error','No data available for this input',this);
+                    window.scrollTo(0, 0)
+                }
+                else{
+                    this.setState({ data: results.data,loadingScreen:false });
                 }
             })
             .catch((error) => {
                 this.setState({loadingScreen : false});
                 openModal('Error','Unable to retreive the data.Please try again. If the issue persists please contact administrator',this);
-                console.log('Error in connecting to the database' + error);
+                //console.log('Error in connecting to the database' + error);
             });
         }else{
             openModal('Error','StartDate is after EndDate. Please verify the conditions!!',this)
@@ -136,6 +152,9 @@ class BannerReport extends Component {
 
     handleRadioButtonChange = (e) => {
         this.setState({checked:e.target.id,data:[]});
+        this.setState(prevState => {
+            return {errors: {...prevState.errors, selectedTranStatus : 'false'}};
+        });
     }
     
     
@@ -143,7 +162,11 @@ class BannerReport extends Component {
     render(){
         
         const {isDisabled} = this.validateForm(this.state);
-        const {errors} = this.state;
+        const {errors,startDate} = this.state;
+        let isEndDateDisabled = true;
+        if(startDate){
+            isEndDateDisabled = false;
+        }
         const divStyle = {
             borderBottom:"1px solid rgb(218, 137, 137)"
         };
@@ -153,7 +176,7 @@ class BannerReport extends Component {
             return(
                 <select id="selectedVendor" className={errors.selectedVendor === 'true' ? "browser-default":"error browser-default"} onChange={this.handleChange}>
                     <option value="" disabled selected>Select</option>
-                    {nodes.nodeNames.map(m => <option value={m}>{m}</option>)}
+                    {nodes.nodeNames.map(m => <option value={m} key={m}>{m}</option>)}
                 </select>
             )
         }
@@ -162,7 +185,7 @@ class BannerReport extends Component {
             return(
                 <select id="selectedStoreType" className={errors.selectedStoreType === 'true' ? "browser-default":"error browser-default"} onChange={this.handleChange}>
                     <option value="" disabled selected>Select</option>
-                    {nodes.storeType.map(m => <option value={m}>{m}</option>)}
+                    {nodes.storeType.map(m => <option value={m} key={m}>{m}</option>)}
                 </select>
             )
         }
@@ -209,8 +232,9 @@ class BannerReport extends Component {
                                         <option value="" disabled selected>Select</option>
                                         <option value="0">Approved</option>
                                         <option value="1">Declined</option>
+                                        <option value="2">Offline</option>
                                         <option value="10">Timeout</option>
-                                        <option value="2">Onhold</option>
+                                        <option value="11">Other</option>
                                     </select>
                                     {/* <label>Status</label> */}
                                 </div>
@@ -231,12 +255,12 @@ class BannerReport extends Component {
                             <div className="row">
                                 <h6 className="col s12 m2">End Date</h6>
                                 <div className="input-field col s6 m3">
-                                    <input id="endDate" type="text" 
+                                    <input id="endDate" type="text" disabled={isEndDateDisabled}
                                     style={errors.endDate ==='true' ? {} : divStyle }
                                         className="datepicker endDateset" />
                                 </div>
                                 <div className="input-field col s6 m3">
-                                    <input id="endTime" type="text" 
+                                    <input id="endTime" type="text" disabled={isEndDateDisabled}
                                         style={errors.endTime ==='true' ? {} : divStyle }
                                         className="timepicker" onSelect={this.handleChange} />
                                 </div>
