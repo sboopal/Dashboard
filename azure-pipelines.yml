@@ -13,12 +13,13 @@ steps:
 - task: NodeTool@0
   inputs:
     versionSpec: '10.x'
-  displayName: 'Install Node.js'
+  displayName: 'Setup Environment'
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+- script: npm install
+  displayName: 'Install Dependencies'
+
+- script: npm run build
+  displayName: 'Build'
 
 - task: PublishBuildArtifacts@1
   inputs:
